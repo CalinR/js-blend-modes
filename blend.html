@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .row {
+        display: flex;
+        justify-content: center;
+      }
+      .row img {
+        width: 240px;
+        margin: 10px;
+        border: 1px solid rgba(0,0,0,0.2);
+      }
+      .row canvas {
+        width: 500px;
+        margin: 10px;
+        background: #eee;
+        border: 1px solid rgba(0,0,0,0.2);
+      }
+      .blend-mode {
+        width: 500px;
+        height: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <select class="blend-mode">
+        <option value="none">None</option>
+        <optgroup label="Darken">
+          <option value="darken">Darken</option>
+          <option value="multiply">Multiply</option>
+          <option value="colorburn">Color Burn</option>
+          <option value="linearburn">Linear Burn</option>
+          <option value="darkercolor">Darker Color</option>
+        </optgroup>
+        <optgroup label="Lighten">
+          <option value="lighten">Lighten</option>
+          <option value="screen">Screen</option>
+          <option value="colordodge">Color Dodge</option>
+          <option value="lineardodge">Linear Dodge (Add)</option>
+          <option value="lightercolor">Lighter Color</option>
+        </optgroup>
+        <optgroup label="Contrast">
+          <option value="overlay">Overlay</option>
+          <option value="softlight">Soft Light</option>
+          <option value="hardlight">Hard Light</option>
+          <option value="vividlight">Vivid Light</option>
+          <option value="linearlight">Linear Light</option>
+          <option value="pinlight">Pin Light</option>
+          <option value="hardmix">Hard Mix</option>
+        </optgroup>
+        <optgroup label="Difference">
+          <option value="difference">Difference</option>
+          <option value="exclusion">Exclusion</option>
+          <option value="subtract">Subtract</option>
+          <option value="divide">Divide</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="row">
+      <img src="./assets/blend-background.jpg" />
+      <img src="./assets/blend-foreground.jpg" />
+    </div>
+    <div class="row">
+      <canvas id="canvas" width="1000" height="1000"></canvas>
+    </div>
+
+    <script>
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+      var currentBlend = 'none';
+      var modeSelect = document.querySelector('.blend-mode');
+
+      var background = new Image();
+      var backgroundLoaded = false;
+      var backgroundCanvas = document.createElement('canvas');
+      var backgroundContext = backgroundCanvas.getContext('2d');
+      backgroundCanvas.width = 1000;
+      backgroundCanvas.height = 1000;
+      background.src = './assets/blend-background.jpg';
+      background.onload = function(){
+        backgroundLoaded = true;
+        backgroundContext.drawImage(background, 0, 0);
+        updateBlendMode(currentBlend);
+      };
+
+      var foreground = new Image();
+      var foregroundLoaded = false;
+      var foregroundCanvas = document.createElement('canvas');
+      var foregroundContext = foregroundCanvas.getContext('2d');
+      foregroundCanvas.width = 1000;
+      foregroundCanvas.height = 1000;
+      foreground.src = './assets/blend-foreground.jpg';
+      foreground.onload = function(){
+        foregroundLoaded = true;
+        foregroundContext.drawImage(foreground, 0, 0);
+        updateBlendMode(currentBlend);
+      };
+
+      function updateBlendMode(mode) {
+        if (!backgroundLoaded || !foregroundLoaded) return;
+        var bData = backgroundContext.getImageData(0, 0, 1000, 1000);
+        var fData = foregroundContext.getImageData(0, 0, 1000, 1000);
+        var target = bData.data;
+        var blend = fData.data;
+
+        for(var i=0; i<target.length; i+=4){
+          var targetR = target[i] / 255;
+          var targetG = target[i+1] / 255;
+          var targetB = target[i+2] / 255;
+          var blendR = blend[i] / 255;
+          var blendG = blend[i+1] / 255;
+          var blendB = blend[i+2] / 255;
+
+          if (mode === 'darken') {
+            target[i] = darken(targetR, blendR) * 255;
+            target[i+1] = darken(targetG, blendG) * 255;
+            target[i+2] = darken(targetB, blendB) * 255;
+          } else if (mode === 'multiply') {
+            target[i] = multiply(targetR, blendR) * 255;
+            target[i+1] = multiply(targetG, blendG) * 255;
+            target[i+2] = multiply(targetB, blendB) * 255;
+          } else if (mode === 'colorburn') {
+            target[i] = colorBurn(targetR, blendR) * 255;
+            target[i+1] = colorBurn(targetG, blendG) * 255;
+            target[i+2] = colorBurn(targetB, blendB) * 255;
+          } else if (mode === 'linearburn') {
+            target[i] = linearBurn(targetR, blendR) * 255;
+            target[i+1] = linearBurn(targetG, blendG) * 255;
+            target[i+2] = linearBurn(targetB, blendB) * 255;
+          } else if (mode === 'darkercolor') {
+            // https://helpx.adobe.com/ca/photoshop/using/blending-modes.html
+            target[i] = ((targetR + targetG + targetB) < (blendR + blendG + blendB) ? targetR : blendR) * 255;
+            target[i+1] = ((targetR + targetG + targetB) < (blendR + blendG + blendB) ? targetG : blendG) * 255;
+            target[i+2] = ((targetR + targetG + targetB) < (blendR + blendG + blendB) ? targetB : blendB) * 255;
+          } else if (mode === 'lighten') {
+            target[i] = lighten(targetR, blendR) * 255;
+            target[i+1] = lighten(targetG, blendG) * 255;
+            target[i+2] = lighten(targetB, blendB) * 255;
+          } else if (mode === 'screen') {
+            target[i] = screen(targetR, blendR) * 255;
+            target[i+1] = screen(targetG, blendG) * 255;
+            target[i+2] = screen(targetB, blendB) * 255;
+          } else if (mode === 'colordodge') {
+            target[i] = colorDodge(targetR, blendR) * 255;
+            target[i+1] = colorDodge(targetG, blendG) * 255;
+            target[i+2] = colorDodge(targetB, blendB) * 255;
+          } else if (mode === 'lineardodge') {
+            target[i] = linearDodge(targetR, blendR) * 255;
+            target[i+1] = linearDodge(targetG, blendG) * 255;
+            target[i+2] = linearDodge(targetB, blendB) * 255;
+          } else if (mode === 'lightercolor') {
+            // https://helpx.adobe.com/ca/photoshop/using/blending-modes.html
+            target[i] = ((targetR + targetG + targetB) > (blendR + blendG + blendB) ? targetR : blendR) * 255;
+            target[i+1] = ((targetR + targetG + targetB) > (blendR + blendG + blendB) ? targetG : blendG) * 255;
+            target[i+2] = ((targetR + targetG + targetB) > (blendR + blendG + blendB) ? targetB : blendB) * 255;
+          } else if (mode === 'overlay') {
+            target[i] = hardLight(blendR, targetR) * 255;
+            target[i+1] = hardLight(blendG, targetG) * 255;
+            target[i+2] = hardLight(blendB, targetB) * 255;
+            // Uses multiply at half strength on darker pixels and screen at half strength on lighter pixels
+            // (targetR > 0.5) * (1 - (1 - targetR) * (1 - blendR)) * 255;
+          } else if (mode === 'hardlight') {
+            target[i] = hardLight(targetR, blendR) * 255;
+            target[i+1] = hardLight(targetG, blendG) * 255;
+            target[i+2] = hardLight(targetB, blendB) * 255;
+          } else if (mode === 'softlight') {
+            target[i] = softLight(targetR, blendR) * 255;
+            target[i+1] = softLight(targetG, blendG) * 255;
+            target[i+2] = softLight(targetB, blendB) * 255;
+          } else if (mode === 'vividlight') {
+            target[i] = vividLight(targetR, blendR) * 255;
+            target[i+1] = vividLight(targetG, blendG) * 255;
+            target[i+2] = vividLight(targetB, blendB) * 255;
+          } else if (mode === 'linearlight') {
+            target[i] = linearLight(targetR, blendR) * 255;
+            target[i+1] = linearLight(targetG, blendG) * 255;
+            target[i+2] = linearLight(targetB, blendB) * 255;
+          } else if (mode === 'pinlight') {
+            target[i] = pinLight(targetR, blendR) * 255;
+            target[i+1] = pinLight(targetG, blendG) * 255;
+            target[i+2] = pinLight(targetB, blendB) * 255;
+          } else if (mode === 'hardmix') {
+            target[i] = hardMix(targetR, blendR) * 255;
+            target[i+1] = hardMix(targetG, blendG) * 255;
+            target[i+2] = hardMix(targetB, blendB) * 255;
+          } else if (mode === 'difference') {
+            target[i] = difference(targetR, blendR) * 255;
+            target[i+1] = difference(targetG, blendG) * 255;
+            target[i+2] = difference(targetB, blendB) * 255;
+          } else if (mode === 'exclusion') {
+            target[i] = exclusion(targetR, blendR) * 255;
+            target[i+1] = exclusion(targetG, blendG) * 255;
+            target[i+2] = exclusion(targetB, blendB) * 255;
+          } else if (mode === 'subtract') {
+            target[i] = subtract(targetR, blendR) * 255;
+            target[i+1] = subtract(targetG, blendG) * 255;
+            target[i+2] = subtract(targetB, blendB) * 255;
+          } else if (mode === 'divide') {
+            target[i] = divide(targetR, blendR) * 255;
+            target[i+1] = divide(targetG, blendG) * 255;
+            target[i+2] = divide(targetB, blendB) * 255;
+          }
+        };
+
+        function darken(a, b) {
+          return Math.min(a, b);
+        }
+
+        function lighten(a, b) {
+          return Math.max(a, b);
+        }
+
+        function colorBurn(a, b) {
+          return (1 - (1 - a) / b);
+        }
+
+        function colorDodge(a, b) {
+          return (a / (1 - b));
+        }
+
+        // https://imagineer.in/blog/math-behind-blend-modes/
+        function multiply(a, b) {
+          return (a * b);
+        }
+
+        function screen(a, b) {
+          return 1 - (1 - a) * (1 - b);
+        }
+
+        function hardLight(a, b) {
+          return (b <= 0.5) * multiply(a, 2 * b) + (b > 0.5) * screen(a, 2 * b - 1);
+        }
+
+        function linearBurn(a, b) {
+          return (a + b - 1);
+        }
+
+        function linearDodge(a, b) {
+          return (a + b);
+        }
+
+        function softLight(a, b) {
+          if (b < 0.5) {
+            return 2 * (a * b) + (a * a) * (1 - 2 * b);
+          }
+
+          return (2 * a) * (1 - b) + Math.sqrt(a) * (2 * b - 1);
+        }
+
+        function vividLight(a, b) {
+          return (b <= 0.5) * colorBurn(a, 2 * b) + (b > 0.5) * colorDodge(a, 2 * b - 1);
+        }
+
+        function linearLight(a, b) {
+          return (b <= 0.5) * linearBurn(a, 2 * b) + (b > 0.5) * linearDodge(a, 2 * b - 1);
+        }
+
+        function pinLight(a, b) {
+          return (b <= 0.5) * darken(a, 2 * b) + (b > 0.5) * lighten(a, 2 * b - 1);
+        }
+
+        function hardMix(a, b) {
+          return (a + b) >= 1 ? 1 : 0;
+        }
+
+        function difference(a, b) {
+          return a > b ? a - b : b - a;
+        }
+
+        function exclusion(a, b) {
+          return a + b - 2 * a * b;
+        }
+
+        function subtract(a, b) {
+          const sum = a - b;
+
+          return sum < 0 ? 0 : sum;
+        }
+
+        function divide(a, b) {
+          return a / b;
+        }
+
+        context.putImageData(bData, 0, 0);
+      };
+
+      modeSelect.addEventListener('change', function(e){
+        currentBlend = e.target.value;
+        updateBlendMode(currentBlend);
+      });
+    </script>
+  </body>
+</html>
