@@ -1,69 +1,158 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Blend Modes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
+      /* http://meyerweb.com/eric/tools/css/reset/ 
+        v2.0 | 20110126
+        License: none (public domain)
+      */
+
+      html, body, div, span, applet, object, iframe,
+      h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+      a, abbr, acronym, address, big, cite, code,
+      del, dfn, em, img, ins, kbd, q, s, samp,
+      small, strike, strong, sub, sup, tt, var,
+      b, u, i, center,
+      dl, dt, dd, ol, ul, li,
+      fieldset, form, label, legend,
+      table, caption, tbody, tfoot, thead, tr, th, td,
+      article, aside, canvas, details, embed, 
+      figure, figcaption, footer, header, hgroup, 
+      menu, nav, output, ruby, section, summary,
+      time, mark, audio, video {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+      }
+      /* HTML5 display-role reset for older browsers */
+      article, aside, details, figcaption, figure, 
+      footer, header, hgroup, menu, nav, section {
+        display: block;
+      }
+      body {
+        line-height: 1;
+      }
+      ol, ul {
+        list-style: none;
+      }
+      blockquote, q {
+        quotes: none;
+      }
+      blockquote:before, blockquote:after,
+      q:before, q:after {
+        content: '';
+        content: none;
+      }
+      table {
+        border-collapse: collapse;
+        border-spacing: 0;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      .container img, .container canvas {
+        width: 100%;
+        display: block;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       .row {
-        display: flex;
-        justify-content: center;
+        display: grid;
+        grid-template: "a a";
+        gap: 20px;
+        margin: 0 20px;
       }
-      .row img {
-        width: 240px;
-        margin: 10px;
-        border: 1px solid rgba(0,0,0,0.2);
+
+      .column-image {
+        position: relative;
       }
-      .row canvas {
-        width: 500px;
-        margin: 10px;
-        background: #eee;
-        border: 1px solid rgba(0,0,0,0.2);
+
+      .column-image:after {
+        position: absolute;
+        top:0;
+        left:0;
+        bottom: 0;
+        right: 0;
+        content: '';
+        border: 2px solid rgba(0,0,0,0.25);
       }
+
+      .full-row {
+        margin: 20px;
+      }
+
       .blend-mode {
-        width: 500px;
+        width: 100%;
         height: 40px;
       }
     </style>
   </head>
   <body>
-    <div class="row">
-      <select class="blend-mode">
-        <option value="none">None</option>
-        <optgroup label="Darken">
-          <option value="darken">Darken</option>
-          <option value="multiply">Multiply</option>
-          <option value="colorburn">Color Burn</option>
-          <option value="linearburn">Linear Burn</option>
-          <option value="darkercolor">Darker Color</option>
-        </optgroup>
-        <optgroup label="Lighten">
-          <option value="lighten">Lighten</option>
-          <option value="screen">Screen</option>
-          <option value="colordodge">Color Dodge</option>
-          <option value="lineardodge">Linear Dodge (Add)</option>
-          <option value="lightercolor">Lighter Color</option>
-        </optgroup>
-        <optgroup label="Contrast">
-          <option value="overlay">Overlay</option>
-          <option value="softlight">Soft Light</option>
-          <option value="hardlight">Hard Light</option>
-          <option value="vividlight">Vivid Light</option>
-          <option value="linearlight">Linear Light</option>
-          <option value="pinlight">Pin Light</option>
-          <option value="hardmix">Hard Mix</option>
-        </optgroup>
-        <optgroup label="Difference">
-          <option value="difference">Difference</option>
-          <option value="exclusion">Exclusion</option>
-          <option value="subtract">Subtract</option>
-          <option value="divide">Divide</option>
-        </optgroup>
-      </select>
-    </div>
-    <div class="row">
-      <img src="./assets/blend-background.jpg" />
-      <img src="./assets/blend-foreground.jpg" />
-    </div>
-    <div class="row">
-      <canvas id="canvas" width="1000" height="1000"></canvas>
+    <div class="container">
+      <div class="full-row">
+        <select class="blend-mode">
+          <option value="none">None</option>
+          <optgroup label="Darken">
+            <option value="darken">Darken</option>
+            <option value="multiply">Multiply</option>
+            <option value="colorburn">Color Burn</option>
+            <option value="linearburn">Linear Burn</option>
+            <option value="darkercolor">Darker Color</option>
+          </optgroup>
+          <optgroup label="Lighten">
+            <option value="lighten">Lighten</option>
+            <option value="screen">Screen</option>
+            <option value="colordodge">Color Dodge</option>
+            <option value="lineardodge">Linear Dodge (Add)</option>
+            <option value="lightercolor">Lighter Color</option>
+          </optgroup>
+          <optgroup label="Contrast">
+            <option value="overlay">Overlay</option>
+            <option value="softlight">Soft Light</option>
+            <option value="hardlight">Hard Light</option>
+            <option value="vividlight">Vivid Light</option>
+            <option value="linearlight">Linear Light</option>
+            <option value="pinlight">Pin Light</option>
+            <option value="hardmix">Hard Mix</option>
+          </optgroup>
+          <optgroup label="Difference">
+            <option value="difference">Difference</option>
+            <option value="exclusion">Exclusion</option>
+            <option value="subtract">Subtract</option>
+            <option value="divide">Divide</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="row">
+        <div class="column">
+          <div class="column-image">
+            <img src="./assets/blend-background.jpg" />
+          </div>
+        </div>
+        <div class="column">
+          <div class="column-image">
+            <img src="./assets/blend-foreground.jpg" />
+          </div>
+        </div>
+      </div>
+      <div class="full-row">
+        <div class="column-image">
+          <canvas id="canvas" width="1000" height="1000"></canvas>
+        </div>
+      </div>
     </div>
 
     <script>
